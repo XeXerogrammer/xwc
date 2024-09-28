@@ -71,9 +71,9 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 		if (argv[i][0] == '-') {
 			if (argv[i][1] == '-') {
 				if (!strcmp(argv[i] + 2, "lines")) {
-					state += 1;
+					state |= 1;
 				} else if (!strcmp(argv[i] + 2, "words")) {
-					state += 2;
+					state |= 2;
 				} else if (!strcmp(argv[i] + 2, "help")) {
 					printf(HELP_TEXT, argv[0]);
 					return 0;
@@ -85,10 +85,19 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 					return -1;
 				}
 			} else {
-				if (!strcmp(argv[i] + 1, "l")) {
-					state += 1;
-				} else if (!strcmp(argv[i] + 1, "w")) {
-					state += 2;
+				int c;
+				for (int j = 1; (c = argv[i][j]) != '\0'; j++) {
+					switch (c) {
+						case 'l':
+							state |= 1;
+							break;
+						case 'w':
+							state |= 2;
+							break;
+						default:
+							printf("Invalid flag -%c\nTry: \"%s --help\" for more information.", c, argv[0]);
+							return -1;
+					}
 				}
 			}
 		} else {
