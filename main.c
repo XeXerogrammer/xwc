@@ -109,16 +109,19 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 		printf(TIP_TEXT, argv[0], argv[0]);
 		return -1;
 	}
-	return state;
+	// default state is 7
+	return state ? state : 7;
 }
 
 struct details get_file_details(FILE *fp) {
 	struct details file_details;
 	file_details.lines = 0;
 	file_details.words = 0;
+	file_details.characters = 0;
 	int c;
 	int is_word = 0;
 	while ((c = fgetc(fp)) != EOF) {
+		file_details.characters++;
 		if (!isspace(c)) {
 			is_word = 1;
 		}
@@ -143,6 +146,9 @@ void report(struct details file, int state, char *file_name) {
 
 	if (state & 2)
 		printf(" %4ld", file.words);
+
+	if (state & 4)
+		printf(" %4ld", file.characters);
 
 	printf(" %s", file_name);
 	printf("\n");
