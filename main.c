@@ -37,6 +37,10 @@ int main(int argc, char **argv) {
 
 	for (int i = 0; i < nfiles; i++) {
 		FILE *fp = fopen(files[i], "r");
+		if (fp == 0) {
+			printf("no such file or directory: %s\n", files[i]);
+			continue;
+		}
 		struct details file_details = get_file_details(fp);
 		add_to_total(file_details, &total_details);
 		report(file_details, state, files[i]);
@@ -74,7 +78,11 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 					state |= 1;
 				} else if (!strcmp(argv[i] + 2, "words")) {
 					state |= 2;
-				} else if (!strcmp(argv[i] + 2, "help")) {
+				} else if (!strcmp(argv[i] + 2, "chars")) {
+					state |= 4;
+				} else if (!strcmp(argv[i] + 2, "bytes")) {
+					state |= 8;
+				}  else if (!strcmp(argv[i] + 2, "help")) {
 					printf(HELP_TEXT, argv[0]);
 					return 0;
 				} else if (!strcmp(argv[i] + 2, "version")) {
@@ -93,6 +101,12 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 							break;
 						case 'w':
 							state |= 2;
+							break;
+						case 'm':
+							state |= 4;
+							break;
+						case 'c':
+							state |= 8;
 							break;
 						default:
 							printf("Invalid flag -%c\nTry: \"%s --help\" for more information.", c, argv[0]);
@@ -119,7 +133,8 @@ struct details get_file_details(FILE *fp) {
 	file_details.words = 0;
 	file_details.characters = 0;
 	int c;
-	int is_word = 0;
+	int is_word = 0;	
+
 	while ((c = fgetc(fp)) != EOF) {
 		file_details.characters++;
 		if (!isspace(c)) {
@@ -137,6 +152,7 @@ struct details get_file_details(FILE *fp) {
 
 		}
 	}
+	file_details.bytes = ftell(fp);
 	return file_details;
 }
 
@@ -149,6 +165,9 @@ void report(struct details file, int state, char *file_name) {
 
 	if (state & 4)
 		printf(" %4ld", file.characters);
+
+	if (state & 8)
+		printf(" %4ld", file.bytes);
 
 	printf(" %s", file_name);
 	printf("\n");
