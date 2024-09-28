@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "help.h"
 
 struct details {
@@ -71,6 +72,8 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 			if (argv[i][1] == '-') {
 				if (!strcmp(argv[i] + 2, "lines")) {
 					state += 1;
+				} else if (!strcmp(argv[i] + 2, "words")) {
+					state += 2;
 				} else if (!strcmp(argv[i] + 2, "help")) {
 					printf(HELP_TEXT, argv[0]);
 					return 0;
@@ -84,6 +87,8 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 			} else {
 				if (!strcmp(argv[i] + 1, "l")) {
 					state += 1;
+				} else if (!strcmp(argv[i] + 1, "w")) {
+					state += 2;
 				}
 			}
 		} else {
@@ -101,10 +106,23 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 struct details get_file_details(FILE *fp) {
 	struct details file_details;
 	file_details.lines = 0;
+	file_details.words = 0;
 	int c;
+	int is_word = 0;
 	while ((c = fgetc(fp)) != EOF) {
-		if (c == '\n') {
-			file_details.lines += 1;	
+		if (!isspace(c)) {
+			is_word = 1;
+		}
+		else {
+			if (is_word) {
+				file_details.words++;
+				is_word = 0;
+			}
+
+			if (c == '\n') {
+				file_details.lines++;	
+			}
+
 		}
 	}
 	return file_details;
@@ -112,7 +130,11 @@ struct details get_file_details(FILE *fp) {
 
 void report(struct details file, int state, char *file_name) {
 	if (state & 1)
-		printf("%4ld", file.lines);
+		printf(" %4ld", file.lines);
+
+	if (state & 2)
+		printf(" %4ld", file.words);
+
 	printf(" %s", file_name);
 	printf("\n");
 }
