@@ -82,7 +82,9 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 					state |= 4;
 				} else if (!strcmp(argv[i] + 2, "bytes")) {
 					state |= 8;
-				}  else if (!strcmp(argv[i] + 2, "help")) {
+				} else if (!strcmp(argv[i] + 2, "max-line-length")) {
+					state |= 16;
+				} else if (!strcmp(argv[i] + 2, "help")) {
 					printf(HELP_TEXT, argv[0]);
 					return 0;
 				} else if (!strcmp(argv[i] + 2, "version")) {
@@ -108,6 +110,9 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 						case 'c':
 							state |= 8;
 							break;
+						case 'L':
+							state |= 16;
+							break;
 						default:
 							printf("Invalid flag -%c\nTry: \"%s --help\" for more information.", c, argv[0]);
 							return -1;
@@ -132,10 +137,12 @@ struct details get_file_details(FILE *fp) {
 	file_details.lines = 0;
 	file_details.words = 0;
 	file_details.characters = 0;
+	file_details.length = 0;
 	int c;
-	int is_word = 0;	
+	int is_word = 0;
+	long line_length = 0;	
 
-	while ((c = fgetc(fp)) != EOF) {
+	while ((c = fgetc(fp)) != EOF) {	
 		file_details.characters++;
 		if (!isspace(c)) {
 			is_word = 1;
@@ -147,10 +154,16 @@ struct details get_file_details(FILE *fp) {
 			}
 
 			if (c == '\n') {
-				file_details.lines++;	
+				file_details.lines++;
+				if (line_length > file_details.length)
+					file_details.length = line_length;
+				line_length = 0;
+				continue;
 			}
 
 		}
+
+		line_length++;
 	}
 	file_details.bytes = ftell(fp);
 	return file_details;
@@ -168,6 +181,9 @@ void report(struct details file, int state, char *file_name) {
 
 	if (state & 8)
 		printf(" %4ld", file.bytes);
+
+	if (state & 16)
+		printf(" %4ld", file.length);
 
 	printf(" %s", file_name);
 	printf("\n");
