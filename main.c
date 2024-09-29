@@ -12,6 +12,7 @@ struct details {
 };
 
 struct details get_file_details(FILE *fp);
+struct details get_stdin_details();
 int parse_command_line_arguments(int argc, char **argv, char **files, int *nfiles);
 void report(struct details file, int state, char *file_name);
 void add_to_total(struct details file, struct details *total);
@@ -30,6 +31,12 @@ int main(int argc, char **argv) {
 	
 	if (state < 0)
 		return 1;
+	
+	if (files[0] == 0) {
+		struct details stdin_details = get_stdin_details();
+		report(stdin_details, state, "");
+		return 0;
+	}
 
 	// gather total details
 	struct details total_details = {0, 0, 0, 0, 0};
@@ -125,8 +132,7 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 	}
 
 	if (*nfiles < 1) {
-		printf(TIP_TEXT, argv[0], argv[0]);
-		return -1;
+		files[0] = 0;
 	}
 	// default state is 7
 	return state ? state : 7;
@@ -167,6 +173,46 @@ struct details get_file_details(FILE *fp) {
 	}
 	file_details.bytes = ftell(fp);
 	return file_details;
+}
+
+struct details get_stdin_details() {
+	struct details stdin_details;
+	stdin_details.lines = 0;
+	stdin_details.words = 0;
+	stdin_details.characters = 0;
+	stdin_details.bytes = 0;
+	stdin_details.length = 0;
+	int c;
+	int is_word = 0;
+	long line_length = 0;
+
+	while ((c = getc(stdin)) != EOF) {
+		stdin_details.characters++;
+		stdin_details.bytes++;
+		
+		if (!isspace(c)) {
+			is_word = 1;
+		}
+		else {
+			if (is_word) {
+				stdin_details.words++;
+				is_word = 0;
+			}
+
+			if (c == '\n') {
+				stdin_details.lines++;
+				if (line_length > stdin_details.length)
+					stdin_details.length = line_length;
+				line_length = 0;
+				continue;
+			}
+
+		}
+
+		line_length++;
+	}
+
+	return stdin_details;
 }
 
 void report(struct details file, int state, char *file_name) {
