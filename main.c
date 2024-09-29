@@ -32,8 +32,9 @@ int main(int argc, char **argv) {
 	if (state < 0)
 		return 1;
 	
-	if (files[0] == 0) {
+	if (files[0] == 0 && state != 0) {
 		struct details stdin_details = get_stdin_details();
+		printf("\n");
 		report(stdin_details, state, "");
 		return 0;
 	}
