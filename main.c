@@ -29,6 +29,8 @@ int main(int argc, char **argv) {
 
 	int state = parse_command_line_arguments(argc, argv, files, &nfiles);
 	
+	int show_total = 1;
+
 	if (state < 0)
 		return 1;
 	
@@ -54,7 +56,7 @@ int main(int argc, char **argv) {
 		report(file_details, state, files[i]);
 	}
 
-	if (nfiles > 1) {
+	if ((nfiles > 1) && (state & 32)) {
 		report(total_details, state, total_text);
 	}
 	return 0;
@@ -74,9 +76,11 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 	// 4 characters
 	// 8 bytes
 	// 16 maximum line length
+	// 32 show total
 	// the > 0 values will be summed to return the final state
 
-	int state = 0;	
+	int state = 0;
+	int show = 1;
 
 	// parse command line arguments
 	for (int i = 1; i < argc; i++) {
@@ -92,6 +96,10 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 					state |= 8;
 				} else if (!strcmp(argv[i] + 2, "max-line-length")) {
 					state |= 16;
+				} else if (!strcmp(argv[i] + 2, "total=yes")) {
+					show = 1;
+				} else if (!strcmp(argv[i] + 2, "total=no")) {
+					show = 0;
 				} else if (!strcmp(argv[i] + 2, "help")) {
 					printf(HELP_TEXT, argv[0]);
 					return 0;
@@ -136,7 +144,7 @@ int parse_command_line_arguments(int argc, char **argv, char **files, int *nfile
 		files[0] = 0;
 	}
 	// default state is 7
-	return state ? state : 7;
+	return (state ? state : 7) + (show * 32);
 }
 
 struct details get_file_details(FILE *fp) {
