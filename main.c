@@ -2,6 +2,9 @@
 #include <string.h>
 #include <ctype.h>
 #include "help.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 struct details {
 	long lines;
@@ -46,6 +49,12 @@ int main(int argc, char **argv) {
 	char *total_text = "total";
 
 	for (int i = 0; i < nfiles; i++) {
+		struct stat path_stat;
+		stat(files[i], &path_stat);
+		if (!S_ISREG(path_stat.st_mode)) {
+			printf("%s is a directory", files[i]);
+			continue;
+		}
 		FILE *fp = fopen(files[i], "r");
 		if (fp == 0) {
 			printf("no such file or directory: %s\n", files[i]);
