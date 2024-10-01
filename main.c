@@ -63,6 +63,7 @@ int main(int argc, char **argv) {
 		struct details file_details = get_file_details(fp);
 		add_to_total(file_details, &total_details);
 		report(file_details, state, files[i]);
+		fclose(fp);
 	}
 
 	if ((nfiles > 1) && (state & 32)) {
