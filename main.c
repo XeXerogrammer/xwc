@@ -167,8 +167,9 @@ struct details get_file_details(FILE *fp) {
 	int is_word = 0;
 	long line_length = 0;	
 
-	while ((c = fgetc(fp)) != EOF) {	
-		file_details.characters++;
+	while ((c = fgetc(fp)) != EOF) {
+		if ((c > 128 && c < 192) || c < 128)	
+			file_details.characters++;
 		if (!isspace(c)) {
 			is_word = 1;
 		}
@@ -190,6 +191,8 @@ struct details get_file_details(FILE *fp) {
 
 		line_length++;
 	}
+	if (is_word)
+		file_details.words++;
 	file_details.bytes = ftell(fp);
 	return file_details;
 }
@@ -230,6 +233,8 @@ struct details get_stdin_details() {
 
 		line_length++;
 	}
+	if (is_word)
+		stdin_details.words++;
 
 	return stdin_details;
 }
