@@ -168,8 +168,9 @@ struct details get_file_details(FILE *fp) {
 	long line_length = 0;	
 
 	while ((c = fgetc(fp)) != EOF) {
-		if ((c > 128 && c < 192) || c < 128)	
-			file_details.characters++;
+		if (!((c > 128 && c < 192) || c < 128))
+			continue;
+		file_details.characters++;
 		if (!isspace(c)) {
 			is_word = 1;
 		}
@@ -209,6 +210,8 @@ struct details get_stdin_details() {
 	long line_length = 0;
 
 	while ((c = getc(stdin)) != EOF) {
+		if (!((c > 128 && c < 192) || c < 128))
+			continue;
 		stdin_details.characters++;
 		stdin_details.bytes++;
 		
