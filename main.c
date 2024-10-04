@@ -205,15 +205,15 @@ struct details get_stdin_details() {
 	stdin_details.characters = 0;
 	stdin_details.bytes = 0;
 	stdin_details.length = 0;
-	int c;
+	long c;
 	int is_word = 0;
 	long line_length = 0;
 
 	while ((c = getc(stdin)) != EOF) {
-		if (!((c > 128 && c < 192) || c < 128))
-			continue;
-		stdin_details.characters++;
 		stdin_details.bytes++;
+		if (!(((c & 255) > 128 && (c & 255) < 192) || (c & 255) < 128))
+			continue;
+		stdin_details.characters++;	
 		
 		if (!isspace(c)) {
 			is_word = 1;
@@ -236,6 +236,9 @@ struct details get_stdin_details() {
 
 		line_length++;
 	}
+	if (line_length > stdin_details.length)
+					stdin_details.length = line_length;
+				line_length = 0;
 	if (is_word)
 		stdin_details.words++;
 
@@ -244,22 +247,21 @@ struct details get_stdin_details() {
 
 void report(struct details file, int state, char *file_name) {
 	if (state & 1)
-		printf(" %4ld", file.lines);
+		printf("%4ld ", file.lines);
 
 	if (state & 2)
-		printf(" %4ld", file.words);
+		printf("%4ld ", file.words);
 
 	if (state & 4)
-		printf(" %4ld", file.characters);
+		printf("%4ld ", file.characters);
 
 	if (state & 8)
-		printf(" %4ld", file.bytes);
+		printf("%4ld ", file.bytes);
 
 	if (state & 16)
-		printf(" %4ld", file.length);
+		printf("%4ld ", file.length);
 
-	printf(" %s", file_name);
-	printf("\n");
+	printf("%s", file_name);
 }
 
 void add_to_total(struct details file, struct details *total) {
